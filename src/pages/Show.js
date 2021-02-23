@@ -6,15 +6,38 @@ const Show = () => {
   const { id } = useParams();
 
   const [show, setShow] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    apiGet(`/shows/${id}?embed[]=seasons&embed[]=cast`).then(results => {
-      setShow(results);
-    });
+    let isMounted = true;
+
+    apiGet(`/shows/${id}?embed[]=seasons&embed[]=cast`)
+      .then(results => {
+        if (isMounted) {
+          setShow(results);
+          setIsLoading(false);
+        }
+      })
+      .catch(err => {
+        setError(err.message);
+        setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
   }, [id]);
 
   // eslint-disable-next-line no-console
   console.log('show', show);
+
+  if (isLoading) {
+    return <div>Data is being loaded</div>;
+  }
+
+  if (error) {
+    return <div>Error occured:{error}</div>;
+  }
 
   return <div>This is my show page</div>;
 };
