@@ -1,13 +1,35 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useReducer } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiGet } from '../misc/config';
-// eslint-disable-next-line arrow-body-style
+
+const reducer = (prevState, action) => {
+  switch (action.type) {
+    case 'FETCH_SUCCESS': {
+      return { isLoading: false, error: null, show: action.show };
+    }
+
+    case 'FETCH_FAILED': {
+      return { ...prevState, isLoading: false, error: action.error };
+    }
+
+    default:
+      return prevState;
+  }
+};
+
+const initialState = {
+  show: null,
+  isLoading: true,
+  error: null,
+};
+
 const Show = () => {
   const { id } = useParams();
 
-  const [show, setShow] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [{ show, isLoading, error }, dispatch] = useReducer(
+    reducer,
+    initialState
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -15,20 +37,20 @@ const Show = () => {
     apiGet(`/shows/${id}?embed[]=seasons&embed[]=cast`)
       .then(results => {
         if (isMounted) {
-          setShow(results);
-          setIsLoading(false);
+          dispatch({ type: 'FETCH_SUCCESS', show: results });
         }
       })
       .catch(err => {
-        setError(err.message);
-        setIsLoading(false);
+        if (isMounted) {
+          dispatch({ type: 'FETCH_FAILED', error: err.message });
+        }
       });
+
     return () => {
       isMounted = false;
     };
   }, [id]);
 
-  // eslint-disable-next-line no-console
   console.log('show', show);
 
   if (isLoading) {
@@ -36,10 +58,10 @@ const Show = () => {
   }
 
   if (error) {
-    return <div>Error occured:{error}</div>;
+    return <div>Error occured: {error}</div>;
   }
 
-  return <div>This is my show page</div>;
+  return <div>this is show page</div>;
 };
 
 export default Show;
