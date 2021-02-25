@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
-import ActorGrid from '../components/actor/ActorGrid';
 import MainPageLayout from '../components/MainPageLayout';
-import ShowGrid from '../components/show/ShowGrid';
 import { apiGet } from '../misc/config';
+import ShowGrid from '../components/show/ShowGrid';
+import ActorGrid from '../components/actor/ActorGrid';
+import { useLastQuery } from '../misc/custom-hooks';
 
 const Home = () => {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useLastQuery();
   const [results, setResults] = useState(null);
   const [searchOption, setSearchOption] = useState('shows');
 
   const isShowsSearch = searchOption === 'shows';
-
-  const onInputChange = ev => {
-    setInput(ev.target.value);
-  };
-
   const onSearch = () => {
     apiGet(`/search/${searchOption}?q=${input}`).then(result => {
       setResults(result);
     });
+  };
+
+  const onInputChange = ev => {
+    setInput(ev.target.value);
   };
 
   const onKeyDown = ev => {
@@ -31,9 +31,9 @@ const Home = () => {
     setSearchOption(ev.target.value);
   };
 
-  const renderResult = () => {
+  const renderResults = () => {
     if (results && results.length === 0) {
-      return <div> Not found </div>;
+      return <div>No results</div>;
     }
 
     if (results && results.length > 0) {
@@ -47,13 +47,11 @@ const Home = () => {
     return null;
   };
 
-  // eslint-disable-next-line arrow-body-style
-
   return (
     <MainPageLayout>
       <input
         type="text"
-        placeholder="search for something"
+        placeholder="Search for something"
         onChange={onInputChange}
         onKeyDown={onKeyDown}
         value={input}
@@ -61,7 +59,7 @@ const Home = () => {
 
       <div>
         <label htmlFor="shows-search">
-          shows
+          Shows
           <input
             id="shows-search"
             type="radio"
@@ -82,10 +80,11 @@ const Home = () => {
           />
         </label>
       </div>
+
       <button type="button" onClick={onSearch}>
         Search
       </button>
-      {renderResult()}
+      {renderResults()}
     </MainPageLayout>
   );
 };
